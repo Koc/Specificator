@@ -1,0 +1,24 @@
+{
+    "name": "brouzie/criterion",
+    "description": "Data access layer framework",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Konstantin.Myakshin",
+            "email": "koc-dp@yandex.ru"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.8"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*@stable",
+        "pagerfanta/pagerfanta": "1.*@stable"
+    },
+    "autoload": {
+        "psr-0": {
+            "Brouzie\\Criterion\\": ""
+        }
+    },
+    "target-dir" : "Brouzie/Criterion"
+}
