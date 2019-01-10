@@ -1,0 +1,13 @@
+brouzie_specificator:
+    product:
+        type: elastica
+        elastica:
+            searchable_id: elastica.indexes.product
+        filter_mappers:
+            - App\Query\Specification\Mapper\Elastica\FilterMapper
+    product:
+        type: doctrine_orm
+        elastica:
+            entity_class: App\Entity\Product
+        filter_mappers:
+            - App\Query\Specification\Mapper\Elastica\FilterMapper

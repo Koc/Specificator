@@ -1,24 +1,40 @@
 {
-    "name": "brouzie/criterion",
-    "description": "Data access layer framework",
+    "name": "brouzie/specificator",
+    "description": "Framework for querying data from read model using Specification pattern. Allows building dynamic queries from reusable components (filters, sort orders, aggregations",
+    "type": "library",
+    "keywords": [
+        "specification",
+        "aggregations"
+    ],
     "license": "MIT",
     "authors": [
         {
-            "name": "Konstantin.Myakshin",
-            "email": "koc-dp@yandex.ru"
+            "name": "Konstantin Myakshin",
+            "email": "molodchick@gmail.com"
         }
     ],
     "require": {
-        "php": ">=5.3.8"
+        "php": ">=7.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "3.7.*@stable",
-        "pagerfanta/pagerfanta": "1.*@stable"
+        "doctrine/orm": "^2.6",
+        "phpunit/phpunit": "^7.0",
+        "psr/container": "^1.0",
+        "ruflin/elastica": "^6.0"
     },
     "autoload": {
-        "psr-0": {
-            "Brouzie\\Criterion\\": ""
+        "psr-4": {
+            "Brouzie\\Specificator\\": "src/"
         }
     },
-    "target-dir" : "Brouzie/Criterion"
+    "autoload-dev": {
+        "psr-4": {
+            "Brouzie\\Specificator\\Test\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1.x-dev"
+        }
+    }
 }

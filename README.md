@@ -1,2 +1,2 @@
-Criterion
-=========
+Specificator
+============
