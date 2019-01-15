@@ -2,6 +2,7 @@
 
 namespace Brouzie\Specificator\Bridge\Doctrine\ORM;
 
+use Brouzie\Specificator\Bridge\Doctrine\ORM\ResultBuilder\ResultStageResultBuilder;
 use Brouzie\Specificator\Locator\FilterMapperLocator;
 use Brouzie\Specificator\Locator\PaginationMapperLocator;
 use Brouzie\Specificator\Locator\ResultBuilderLocator;
@@ -47,20 +48,27 @@ class DoctrineOrmQueryRepository
 
     public function query(Specification $specification, string $resultItemClass): Result
     {
-        $entityManager = $this->managerRegistry->getManagerForClass($this->entityClass);
-        /** @var EntityRepository $entityRepository */
-        $entityRepository = $entityManager->getRepository($this->entityClass);
-        $queryBuilder = $entityRepository->createQueryBuilder('entity');
+        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
+
+        $queryBuilder = $this->createQueryBuilder();
+        if ($queryStageResultBuilder = $resultBuilder->getQueryStage()) {
+            $queryStageResultBuilder($queryBuilder);
+        }
 
         $this->mapFilters($specification, $queryBuilder);
         $this->mapSortsOrders($specification, $queryBuilder);
         $this->mapPagination($specification, $queryBuilder);
 
         $queryResult = $queryBuilder->getQuery()->getResult();
+        $result = $queryResult;
+        if ($resultStageResultBuilder = $resultBuilder->getResultStage()) {
+            $result = $resultStageResultBuilder($result);
+        }
+
         //TODO: implement pagination count query
         $paginationResult = 0;
 
-        return $this->buildResult($queryResult,$paginationResult, $resultItemClass);
+        return $this->buildResult($queryResult, $paginationResult, $resultItemClass);
     }
 
     private function mapFilters(Specification $specification, QueryBuilder $queryBuilder): void
@@ -91,7 +99,7 @@ class DoctrineOrmQueryRepository
 
     private function buildResult(array $queryResult, int $paginationResult, string $resultItemClass): Result
     {
-        /** @var ResultBuilder $resultBuilder */
+        /** @var ResultStageResultBuilder $resultBuilder */
         $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
 
         $items = [];
@@ -100,5 +108,14 @@ class DoctrineOrmQueryRepository
         }
 
         return new Result($items, $paginationResult);
+    }
+
+    private function createQueryBuilder(): QueryBuilder
+    {
+        $entityManager = $this->managerRegistry->getManagerForClass($this->entityClass);
+        /** @var EntityRepository $entityRepository */
+        $entityRepository = $entityManager->getRepository($this->entityClass);
+
+        return $entityRepository->createQueryBuilder('entity');
     }
 }

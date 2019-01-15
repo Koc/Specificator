@@ -17,10 +17,10 @@ class Specification
 
     /**
      * @param object[] $filters
-     * @param object[] $sorts
+     * @param object[] $sortOrders
      * @param object|null $pagination
      */
-    public function __construct(array $filters = [], array $sorts = [], object $pagination = null)
+    public function __construct(array $filters = [], array $sortOrders = [], object $pagination = null)
     {
         $this->filtersBag = new \SplObjectStorage();
         foreach ($filters as $filter) {
@@ -28,8 +28,8 @@ class Specification
         }
 
         $this->sortOrdersBag = new \SplObjectStorage();
-        foreach ($sorts as $sort) {
-            $this->addSortOrder($sort);
+        foreach ($sortOrders as $sortOrder) {
+            $this->addSortOrder($sortOrder);
         }
 
         $this->setPagination($pagination ?: new PagePagination(20, 1));
@@ -45,7 +45,7 @@ class Specification
      */
     public function getFilters(): array
     {
-        //TODO: implement
+        return iterator_to_array($this->filtersBag);
     }
 
     public function addSortOrder(object $sortOrder): void
@@ -58,7 +58,7 @@ class Specification
      */
     public function getSortOrders(): array
     {
-        //TODO: implement
+        return iterator_to_array($this->sortOrdersBag);
     }
 
     public function setPagination(object $pagination): void

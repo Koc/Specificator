@@ -2,6 +2,7 @@
 
 namespace Brouzie\Specificator\Bridge\Elastica;
 
+use Brouzie\Specificator\Bridge\Elastica\Paginator\QueryStageSlicer;
 use Brouzie\Specificator\Locator\FilterMapperLocator;
 use Brouzie\Specificator\Locator\PaginationMapperLocator;
 use Brouzie\Specificator\Locator\ResultBuilderLocator;
@@ -44,17 +45,20 @@ class ElasticaQueryRepository implements QueryRepository
 
     public function query(Specification $specification, string $resultItemClass): Result
     {
-        $query = new Query();
-        $boolQuery = new Query\BoolQuery();
-        $query->setQuery($boolQuery);
+        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
 
-        $this->mapFilters($specification, $boolQuery);
+        $query = $this->createQuery();
+        if ($queryStageResultBuilder = $resultBuilder->getQueryStage()) {
+            $queryStageResultBuilder($query);
+        }
+
+        $this->mapFilters($specification, $query->getQuery());
         $this->mapSortsOrders($specification, $query);
         $this->mapPagination($specification, $query);
 
         $resultSet = $this->index->search($query);
 
-        return $this->buildResult($resultSet, $resultItemClass);
+        return $this->buildResult($resultSet, $resultBuilder->getResultStage());
     }
 
     private function mapFilters(Specification $specification, Query\BoolQuery $boolQuery): void
@@ -78,21 +82,24 @@ class ElasticaQueryRepository implements QueryRepository
     private function mapPagination(Specification $specification, Query $query): void
     {
         $pagination = $specification->getPagination();
-        /** @var PaginationMapper $paginationMapper */
+        /** @var QueryStageSlicer $paginationMapper */
         $paginationMapper = $this->paginationMapperLocator->getPaginationMapper($pagination);
         $paginationMapper($pagination, $query);
     }
 
-    private function buildResult(ResultSet $resultSet, string $resultItemClass): Result
+    private function buildResult(ResultSet $resultSet, callable $resultStageResultBuilder): Result
     {
-        /** @var ResultBuilder $resultBuilder */
-        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
+        return new Result(
+            $resultStageResultBuilder($resultSet->getResults()),
+            $resultSet->getTotalHits()
+        );
+    }
 
-        $items = [];
-        foreach ($resultSet->getResults() as $elasticaResultItem) {
-            $items[] = $resultBuilder($elasticaResultItem);
-        }
+    private function createQuery(): Query
+    {
+        $query = new Query();
+        $query->setQuery(new Query\BoolQuery());
 
-        return new Result($items, $resultSet->getTotalHits());
+        return $query;
     }
 }

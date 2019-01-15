@@ -51,11 +51,14 @@ class ProductItem
 
     private $sku;
 
-    public function __construct(int $id, string $name, string $sku)
+    private $qty;
+
+    public function __construct(int $id, string $name, string $sku, int $qty)
     {
         $this->id = $id;
         $this->name = $name;
         $this->sku = $sku;
+        $this->qty = $qty;
     }
 
     public function getId(): int
@@ -72,6 +75,11 @@ class ProductItem
     {
         return $this->sku;
     }
+
+    public function getQty(): int
+    {
+        return $this->qty;
+    }
 }
 
 namespace App\Query\Specification\Schema;
@@ -85,14 +93,20 @@ interface Product
 
 namespace App\Query\Specification\Mapper\Elastica;
 
+use App\Query\Result\ProductItem;
 use App\Query\Specification\Filter\PriceRange;
 use App\Query\Specification\Filter\Sku;
 use App\Query\Specification\Schema\Product;
+use Brouzie\Specificator\Locator\FilterSubscriber;
+use Brouzie\Specificator\Locator\ResultSubscriber;
+use Brouzie\Specificator\QueryRepository;
+use Brouzie\Specificator\Specification;
+use Doctrine\ORM\QueryBuilder;
 use Elastica\Query\BoolQuery;
 use Elastica\Query\Range;
 use Elastica\Query\Term;
 
-class FilterMapper
+class FilterMapper implements FilterSubscriber
 {
     public static function getMappedFilters(): iterable
     {
@@ -124,6 +138,56 @@ class FilterMapper
                 ]
             )
         );
+    }
+}
+
+class ResultBuilder implements ResultSubscriber
+{
+    private $inventoryRepository;
+
+    public static function getSubscribedResultItems(): array
+    {
+        return [
+            ProductItem::class => [
+                self::STAGE_QUERY => 'queryProductItem',
+                self::STAGE_RESULT => 'buildProductItem',
+            ],
+        ];
+    }
+
+    public function __construct(QueryRepository $inventoryRepository)
+    {
+        $this->inventoryRepository = $inventoryRepository;
+    }
+
+    public function queryProductItem(QueryBuilder $queryBuilder): void
+    {
+        $queryBuilder
+            ->select('id')
+            ->addSelect('sku')
+            ->addSelect('name');
+    }
+
+    /**
+     * @param array[] $result
+     *
+     * @return ProductItem[]
+     */
+    public function buildProductItem(array $result): array
+    {
+        $productIds = array_column($result, 'id');
+
+        $getQtySpecification = new Specification([new ProductIdFilter($productIds)]);
+        $qtyItems = $this->inventoryRepository->query($getQtySpecification, ProductQty::class)->getItems();
+
+        $result = [];
+        foreach ($result as $row) {
+            $id = $row['id'];
+            $qty = $qtyItems[$id];
+            $result[] = new ProductItem($id, $row['name'], $row['sku'], $qty);
+        }
+
+        return $result;
     }
 }
 

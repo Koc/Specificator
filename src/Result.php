@@ -12,7 +12,7 @@ class Result
     private $totalItemsCount;
 
     /**
-     * @param object $items
+     * @param object[] $items
      * @param int $totalItemsCount
      */
     public function __construct(array $items, int $totalItemsCount)
@@ -22,7 +22,7 @@ class Result
     }
 
     /**
-     * @return object
+     * @return object[]
      */
     public function getItems(): array
     {
