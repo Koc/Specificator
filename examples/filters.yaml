@@ -15,5 +15,8 @@ brouzie_specificator:
     specification_factories:
         products_query:
             - App\Query\Http\SpecificationBuilder\FilterSpecificationBuilder
-            - App\Query\Http\SpecificationBuilder\SortOrderSpecificationBuilder
+            - App\Query\Http\SpecificationBuilder\SortOrderSpecificationBuilder:
+                pice: App\Query\Specification\SortOrder\Price
+                sale: App\Query\Specification\SortOrder\Sale
+                latest: App\Query\Specification\SortOrder\Latest
             - App\Query\Http\SpecificationBuilder\LimitOffsetPaginatedRequest

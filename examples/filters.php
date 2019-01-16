@@ -104,7 +104,7 @@ interface LimitOffsetPaginatedRequest
 
 class PaginationSpecificationBuilder
 {
-    public function buildSpecification(Specification $specification, LimitOffsetPaginatedRequest $request): void
+    public function __invoke(Specification $specification, LimitOffsetPaginatedRequest $request): void
     {
         $specification->setPagination(new LimitOffsetPagination($request->getLimit(), $request->getOffset()));
     }
