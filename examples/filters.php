@@ -1,5 +1,115 @@
 <?php
 
+namespace App\Query\Http\Request;
+
+use App\Query\Http\SpecificationBuilder\LimitOffsetPaginatedRequest;
+
+class GetProductsFilter
+{
+    public $sku;
+
+    public $priceFrom;
+
+    public $priceTo;
+}
+
+class GetProductsQuery implements LimitOffsetPaginatedRequest
+{
+    /**
+     * @var GetProductsFilter
+     */
+    public $filter;
+
+    public $sort = [];
+
+    public $limit = 20;
+
+    public $offset = 0;
+
+    public function getLimit(): int
+    {
+        return $this->limit;
+    }
+
+    public function getOffset(): int
+    {
+        return $this->offset;
+    }
+}
+
+namespace App\Query\Http\SpecificationBuilder;
+
+use App\Query\Http\Request\GetProductsQuery;
+use App\Query\Specification\Filter\PriceRange;
+use App\Query\Specification\Filter\Sku;
+use App\Query\Specification\SortOrder\Latest;
+use App\Query\Specification\SortOrder\Price;
+use App\Query\Specification\SortOrder\Sale;
+use Brouzie\Specificator\Pagination\LimitOffsetPagination;
+use Brouzie\Specificator\SortOrder\SupportsInverse;
+use Brouzie\Specificator\Specification;
+
+class FilterSpecificationBuilder
+{
+    public function __invoke(Specification $specification, GetProductsQuery $request): void
+    {
+        if ($request->filter->sku) {
+            $specification->addFilter(new Sku($request->filter->sku));
+        }
+
+        if ($request->filter->priceFrom || $request->filter->priceTo) {
+            $specification->addFilter(new PriceRange($request->filter->priceTo, $request->filter->priceTo));
+        }
+    }
+}
+
+interface SortedPaginationResult
+{
+    public function getSortOrders(): array;
+}
+
+class SortOrderSpecificationBuilder
+{
+    private const SORT_ORDERS_MAPPING = [
+        'sale' => Sale::class,
+        'latest' => Latest::class,
+        'price' => Price::class,
+    ];
+
+    public function __invoke(Specification $specification, SortedPaginationResult $request): void
+    {
+        foreach ($request->getSortOrders() as $sortOrder => $direction) {
+            if (!isset(static::SORT_ORDERS_MAPPING[$sortOrder])) {
+                throw new \OutOfBoundsException();
+            }
+
+            $sortOrderClass = static::SORT_ORDERS_MAPPING[$sortOrder];
+            if (is_a($sortOrderClass, SupportsInverse::class)) {
+                $sortOrderObject = $sortOrderClass::create('DESC' === $direction);
+            } else {
+                $sortOrderObject = new $sortOrderClass();
+            }
+
+            $specification->addSortOrder($sortOrderObject);
+        }
+    }
+}
+
+interface LimitOffsetPaginatedRequest
+{
+    public function getLimit(): int;
+
+    public function getOffset(): int;
+}
+
+class PaginationSpecificationBuilder
+{
+    public function buildSpecification(Specification $specification, LimitOffsetPaginatedRequest $request): void
+    {
+        $specification->setPagination(new LimitOffsetPagination($request->getLimit(), $request->getOffset()));
+    }
+}
+
 namespace App\Query\Specification\Filter;
 
 class Sku
@@ -16,7 +126,6 @@ class Sku
         return $this->sku;
     }
 }
-
 
 class PriceRange
 {
@@ -39,6 +148,40 @@ class PriceRange
     {
         return $this->to;
     }
+}
+
+namespace App\Query\Specification\SortOrder;
+
+use Brouzie\Specificator\SortOrder\SupportsInverse;
+
+class Price implements SupportsInverse
+{
+    private $inverse;
+
+    public function __construct(bool $inverse)
+    {
+        $this->inverse = $inverse;
+    }
+
+    public static function create(?bool $inverse)
+    {
+        return new self($inverse ?? false);
+    }
+
+    public function isInverse(): bool
+    {
+        return $this->inverse;
+    }
+}
+
+class Sale
+{
+    //
+}
+
+class Latest
+{
+    //
 }
 
 namespace App\Query\Result;
@@ -193,36 +336,26 @@ class ResultBuilder implements ResultSubscriber
 
 namespace App\Controller;
 
+use App\Query\Http\Request\GetProductsQuery;
 use App\Query\Result\ProductItem;
-use App\Query\Specification\Filter\PriceRange;
-use App\Query\Specification\Filter\Sku;
+use Brouzie\Specificator\Http\SpecificationFactory;
 use Brouzie\Specificator\QueryRepository;
-use Brouzie\Specificator\Specification;
 
 class GetProducts
 {
+    private $specificationFactory;
+
     private $queryRepository;
 
-    public function __construct(QueryRepository $queryRepository)
+    public function __construct(SpecificationFactory $specificationFactory, QueryRepository $queryRepository)
     {
+        $this->specificationFactory = $specificationFactory;
         $this->queryRepository = $queryRepository;
     }
 
-    public function __invoke()
+    public function __invoke(GetProductsQuery $request)
     {
-        $specification = new Specification();
-        if (!empty($_GET['filters']['sku'])) {
-            $specification->addFilter(new Sku($_GET['filters']['sku']));
-        }
-
-        if (!empty($_GET['filters']['price'])) {
-            $specification->addFilter(
-                new PriceRange(
-                    $_GET['filters']['price']['from'],
-                    $_GET['filters']['price']['to']
-                )
-            );
-        }
+        $specification = $this->specificationFactory->createSpecification($request);
 
         return $this->queryRepository->query($specification, ProductItem::class);
     }
