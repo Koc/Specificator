@@ -1,13 +1,19 @@
 brouzie_specificator:
-    product:
-        type: elastica
-        elastica:
-            searchable_id: elastica.indexes.product
-        filter_mappers:
-            - App\Query\Specification\Mapper\Elastica\FilterMapper
-    product:
-        type: doctrine_orm
-        elastica:
-            entity_class: App\Entity\Product
-        filter_mappers:
-            - App\Query\Specification\Mapper\Elastica\FilterMapper
+    sources:
+        product:
+            type: elastica
+            elastica:
+                searchable_id: elastica.indexes.product
+            filter_mappers:
+                - App\Query\Product\Mapper\Elastica\FilterMapper
+        payment:
+            type: doctrine_orm
+            doctrine_orm:
+                entity_class: App\Entity\Payment
+            filter_mappers:
+                - App\Query\Payment\Mapper\DoctrineORM\FilterMapper
+    specification_factories:
+        products_query:
+            - App\Query\Http\SpecificationBuilder\FilterSpecificationBuilder
+            - App\Query\Http\SpecificationBuilder\SortOrderSpecificationBuilder
+            - App\Query\Http\SpecificationBuilder\LimitOffsetPaginatedRequest
