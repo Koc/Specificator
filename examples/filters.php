@@ -63,7 +63,7 @@ class FilterSpecificationBuilder
     }
 }
 
-interface SortedPaginationResult
+interface SortedPaginationRequest
 {
     public function getSortOrders(): array;
 }
@@ -76,7 +76,7 @@ class SortOrderSpecificationBuilder
         'price' => Price::class,
     ];
 
-    public function __invoke(Specification $specification, SortedPaginationResult $request): void
+    public function __invoke(Specification $specification, SortedPaginationRequest $request): void
     {
         foreach ($request->getSortOrders() as $sortOrder => $direction) {
             if (!isset(static::SORT_ORDERS_MAPPING[$sortOrder])) {
@@ -184,6 +184,23 @@ class Latest
     //
 }
 
+namespace App\Query\Specification\Aggregation;
+
+class CategoryIdAggregation
+{
+    private $limit;
+
+    public function __construct(int $limit)
+    {
+        $this->limit = $limit;
+    }
+
+    public function getLimit(): int
+    {
+        return $this->limit;
+    }
+}
+
 namespace App\Query\Result;
 
 class ProductItem
@@ -225,6 +242,47 @@ class ProductItem
     }
 }
 
+class ProductCategoryAggregationResult
+{
+    private $items;
+
+    public function __construct(ProductCategoryAggregationItem ...$items)
+    {
+        $this->items = $items;
+    }
+
+    /**
+     * @return ProductCategoryAggregationItem[]
+     */
+    public function getItems(): array
+    {
+        return $this->items;
+    }
+}
+
+class ProductCategoryAggregationItem
+{
+    private $categoryId;
+
+    private $productsCount;
+
+    public function __construct(int $categoryId, int $productsCount)
+    {
+        $this->categoryId = $categoryId;
+        $this->productsCount = $productsCount;
+    }
+
+    public function getCategoryId(): int
+    {
+        return $this->categoryId;
+    }
+
+    public function getProductsCount(): int
+    {
+        return $this->productsCount;
+    }
+}
+
 namespace App\Query\Specification\Schema;
 
 interface Product
@@ -236,7 +294,10 @@ interface Product
 
 namespace App\Query\Specification\Mapper\Elastica;
 
+use App\Query\Result\ProductCategoryAggregationItem;
+use App\Query\Result\ProductCategoryAggregationResult;
 use App\Query\Result\ProductItem;
+use App\Query\Specification\Aggregation\CategoryIdAggregation;
 use App\Query\Specification\Filter\PriceRange;
 use App\Query\Specification\Filter\Sku;
 use App\Query\Specification\Schema\Product;
@@ -245,18 +306,20 @@ use Brouzie\Specificator\Locator\ResultSubscriber;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Specification;
 use Doctrine\ORM\QueryBuilder;
+use Elastica\Aggregation\Terms;
+use Elastica\Query;
 use Elastica\Query\BoolQuery;
 use Elastica\Query\Range;
 use Elastica\Query\Term;
 
 class FilterMapper implements FilterSubscriber
 {
-    public static function getMappedFilters(): iterable
+    public static function getMappedFilters(): array
     {
-        //TODO: automatically determinate all filter mappers using reflection (public methods starts from "map")
-        yield Sku::class => 'mapSkuFilter';
-
-        yield PriceRange::class => 'mapPriceFilter';
+        return [
+            Sku::class => 'mapSkuFilter',
+            PriceRange::class => 'mapPriceFilter',
+        ];
     }
 
     public function mapSkuFilter(Sku $filter, BoolQuery $boolQuery): void
@@ -334,10 +397,44 @@ class ResultBuilder implements ResultSubscriber
     }
 }
 
+class CategoryIdAggregator implements AggregationSubscriber
+{
+    public static function getSubscribedAggregations(): array
+    {
+        return [
+            CategoryIdAggregation::class => [
+                self::STAGE_BUILD_QUERY => 'buildQuery',
+                self::STAGE_HYDRATE_RESULT => 'hydrateResult',
+            ],
+        ];
+    }
+
+    public function buildQuery(CategoryIdAggregation $aggregation, Query $query, string $prefix): void
+    {
+        $agg = (new Terms($prefix.'caregories'))
+            ->setField('category_id')
+            ->setSize($aggregation->getLimit());
+
+        $query->addAggregation($agg);
+    }
+
+    public function hydrateResult(array $aggs): ProductCategoryAggregationResult
+    {
+        $items = [];
+        foreach ($aggs['categories']['buckets'] as $bucket) {
+            $items[] = new ProductCategoryAggregationItem($bucket['key'], $bucket['doc_count']);
+        }
+
+        return new ProductCategoryAggregationResult(...$items);
+    }
+}
+
 namespace App\Controller;
 
 use App\Query\Http\Request\GetProductsQuery;
+use App\Query\Result\ProductCategoryAggregationResult;
 use App\Query\Result\ProductItem;
+use App\Query\Specification\Aggregation\CategoryIdAggregation;
 use Brouzie\Specificator\Http\SpecificationFactory;
 use Brouzie\Specificator\QueryRepository;
 
@@ -353,10 +450,43 @@ class GetProducts
         $this->queryRepository = $queryRepository;
     }
 
-    public function __invoke(GetProductsQuery $request)
+    public function __invoke(GetProductsQuery $request): GetProductsResponse
     {
         $specification = $this->specificationFactory->createSpecification($request);
+        $specification->addAggregation('category_ids', new CategoryIdAggregation(10));
 
-        return $this->queryRepository->query($specification, ProductItem::class);
+        $result = $this->queryRepository->query($specification, ProductItem::class);
+
+        /** @var ProductCategoryAggregationResult $categoryIdAggregation */
+        $categoryIdAggregation = $result->getAggregation('category_ids');
+
+        return new GetProductsResponse(
+            $result->getItems(),
+            $result->getTotalItemsCount(),
+            $categoryIdAggregation->getItems()
+        );
     }
+}
+
+class GetProductsResponse
+{
+    private $items;
+
+    private $totalCount;
+
+    private $categoryIdAggregation;
+
+    /**
+     * @param $items
+     * @param $totalCount
+     * @param $categoryIdAggregation
+     */
+    public function __construct($items, $totalCount, $categoryIdAggregation)
+    {
+        $this->items = $items;
+        $this->totalCount = $totalCount;
+        $this->categoryIdAggregation = $categoryIdAggregation;
+    }
+
+
 }

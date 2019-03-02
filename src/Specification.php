@@ -40,6 +40,11 @@ class Specification
         $this->filtersBag->attach($filter);
     }
 
+    public function addAggregation(string $name, object $aggregation): void
+    {
+        // ...
+    }
+
     /**
      * @return object[]
      */
