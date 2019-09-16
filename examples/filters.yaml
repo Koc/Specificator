@@ -1,17 +1,18 @@
 brouzie_specificator:
     sources:
         product:
-            type: elastica
+            source: elastica
             elastica:
                 searchable_id: elastica.indexes.product
-            filter_mappers:
+            mappers:
                 - App\Query\Product\Mapper\Elastica\FilterMapper
         payment:
-            type: doctrine_orm
+            source: doctrine_orm
             doctrine_orm:
-                entity_class: App\Entity\Payment
-            filter_mappers:
+                entity: App\Entity\Payment
+            mappers:
                 - App\Query\Payment\Mapper\DoctrineORM\FilterMapper
+
     specification_factories:
         products_query:
             - App\Query\Http\SpecificationBuilder\FilterSpecificationBuilder
