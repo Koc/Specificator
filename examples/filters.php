@@ -301,8 +301,8 @@ use App\Query\Specification\Aggregation\CategoryIdAggregation;
 use App\Query\Specification\Filter\PriceRange;
 use App\Query\Specification\Filter\Sku;
 use App\Query\Specification\Schema\Product;
-use Brouzie\Specificator\Locator\FilterSubscriber;
-use Brouzie\Specificator\Locator\ResultSubscriber;
+use Brouzie\Specificator\Subscriber\FilterSubscriber;
+use Brouzie\Specificator\Subscriber\ResultSubscriber;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Specification;
 use Doctrine\ORM\QueryBuilder;
@@ -314,7 +314,7 @@ use Elastica\Query\Term;
 
 class FilterMapper implements FilterSubscriber
 {
-    public static function getMappedFilters(): array
+    public static function getSubscribedFilters(): array
     {
         return [
             Sku::class => 'mapSkuFilter',

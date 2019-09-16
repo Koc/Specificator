@@ -9,5 +9,5 @@ use Doctrine\ORM\QueryBuilder;
  */
 interface SortOrderMapper
 {
-    public function __invoke(object $sortOrder, QueryBuilder $queryBuilder): void;
+    public function mapSortOrder(object $sortOrder, QueryBuilder $queryBuilder): void;
 }

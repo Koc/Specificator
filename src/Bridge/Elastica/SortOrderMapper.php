@@ -12,5 +12,5 @@ interface SortOrderMapper
     /**
      * Maps sort to query.
      */
-    public function __invoke(object $sortOrder, Query $query): void;
+    public function mapSortOrder(object $sortOrder, Query $query): void;
 }

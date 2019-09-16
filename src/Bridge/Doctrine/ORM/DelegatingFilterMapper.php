@@ -7,6 +7,9 @@ use Doctrine\ORM\QueryBuilder;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
+/**
+ * @author Konstantin Myakshin <molodchick@gmail.com>
+ */
 class DelegatingFilterMapper implements FilterMapper
 {
     private $container;

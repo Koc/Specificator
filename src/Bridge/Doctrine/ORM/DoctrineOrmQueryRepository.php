@@ -3,9 +3,8 @@
 namespace Brouzie\Specificator\Bridge\Doctrine\ORM;
 
 use Brouzie\Specificator\Bridge\Doctrine\ORM\ResultBuilder\ResultStageResultBuilder;
-use Brouzie\Specificator\Locator\PaginationMapperLocator;
-use Brouzie\Specificator\Locator\ResultBuilderLocator;
-use Brouzie\Specificator\Locator\SortOrderMapperLocator;
+use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
+use Brouzie\Specificator\Subscriber\ResultBuilderLocator;
 use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
 use Doctrine\Common\Persistence\ManagerRegistry;
@@ -20,7 +19,7 @@ class DoctrineOrmQueryRepository
     private $managerRegistry;
     private $entityClass;
     private $filterMapper;
-    private $sortOrderMapperLocator;
+    private $sortOrderMapper;
     private $paginationMapperLocator;
     private $resultBuilderLocator;
 
@@ -28,14 +27,14 @@ class DoctrineOrmQueryRepository
         ManagerRegistry $managerRegistry,
         string $entityClass,
         FilterMapper $filterMapper,
-        SortOrderMapperLocator $sortOrderMapperLocator,
+        SortOrderMapper $sortOrderMapper,
         PaginationMapperLocator $paginationMapperLocator,
         ResultBuilderLocator $resultBuilderLocator
     ) {
         $this->managerRegistry = $managerRegistry;
         $this->entityClass = $entityClass;
         $this->filterMapper = $filterMapper;
-        $this->sortOrderMapperLocator = $sortOrderMapperLocator;
+        $this->sortOrderMapper = $sortOrderMapper;
         $this->paginationMapperLocator = $paginationMapperLocator;
         $this->resultBuilderLocator = $resultBuilderLocator;
     }
@@ -75,9 +74,7 @@ class DoctrineOrmQueryRepository
     private function mapSortsOrders(Specification $specification, QueryBuilder $queryBuilder): void
     {
         foreach ($specification->getSortOrders() as $sortOrder) {
-            /** @var SortOrderMapper $sortOrderMapper */
-            $sortOrderMapper = $this->sortOrderMapperLocator->getSortOrderMapper($sortOrder);
-            $sortOrderMapper($sortOrder, $queryBuilder);
+            $this->sortOrderMapper->mapSortOrder($sortOrder, $queryBuilder);
         }
     }
 

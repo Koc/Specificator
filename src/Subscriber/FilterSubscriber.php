@@ -1,7 +1,10 @@
 <?php
 
-namespace Brouzie\Specificator\Locator;
+namespace Brouzie\Specificator\Subscriber;
 
+/**
+ * @author Konstantin Myakshin <molodchick@gmail.com>
+ */
 interface FilterSubscriber
 {
     /**
@@ -12,5 +15,5 @@ interface FilterSubscriber
      *
      * @return array
      */
-    public static function getMappedFilters(): array;
+    public static function getSubscribedFilters(): array;
 }

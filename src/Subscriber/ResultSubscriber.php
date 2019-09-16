@@ -1,6 +1,6 @@
 <?php
 
-namespace Brouzie\Specificator\Locator;
+namespace Brouzie\Specificator\Subscriber;
 
 interface ResultSubscriber
 {

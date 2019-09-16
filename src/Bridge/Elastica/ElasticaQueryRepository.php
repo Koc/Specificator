@@ -3,13 +3,13 @@
 namespace Brouzie\Specificator\Bridge\Elastica;
 
 use Brouzie\Specificator\Bridge\Elastica\Paginator\QueryStageSlicer;
-use Brouzie\Specificator\Locator\FilterMapperLocator;
-use Brouzie\Specificator\Locator\PaginationMapperLocator;
-use Brouzie\Specificator\Locator\ResultBuilderLocator;
-use Brouzie\Specificator\Locator\SortOrderMapperLocator;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
+use Brouzie\Specificator\Subscriber\FilterMapperLocator;
+use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
+use Brouzie\Specificator\Subscriber\ResultBuilderLocator;
+use Brouzie\Specificator\Subscriber\SortOrderMapperLocator;
 use Elastica\Query;
 use Elastica\ResultSet;
 use Elastica\SearchableInterface;
@@ -21,9 +21,9 @@ class ElasticaQueryRepository implements QueryRepository
 {
     private $index;
 
-    private $filterMapperLocator;
+    private $filterMapper;
 
-    private $sortOrderMapperLocator;
+    private $sortOrderMapper;
 
     private $paginationMapperLocator;
 
@@ -31,14 +31,14 @@ class ElasticaQueryRepository implements QueryRepository
 
     public function __construct(
         SearchableInterface $index,
-        FilterMapperLocator $filterMapperLocator,
-        SortOrderMapperLocator $sortOrderMapperLocator,
+        FilterMapper $filterMapper,
+        SortOrderMapper $sortOrderMapper,
         PaginationMapperLocator $paginationMapperLocator,
         ResultBuilderLocator $resultBuilderLocator
     ) {
         $this->index = $index;
-        $this->filterMapperLocator = $filterMapperLocator;
-        $this->sortOrderMapperLocator = $sortOrderMapperLocator;
+        $this->filterMapper = $filterMapper;
+        $this->sortOrderMapper = $sortOrderMapper;
         $this->paginationMapperLocator = $paginationMapperLocator;
         $this->resultBuilderLocator = $resultBuilderLocator;
     }
@@ -64,18 +64,14 @@ class ElasticaQueryRepository implements QueryRepository
     private function mapFilters(Specification $specification, Query\BoolQuery $boolQuery): void
     {
         foreach ($specification->getFilters() as $filter) {
-            /** @var FilterMapper $filterMapper */
-            $filterMapper = $this->filterMapperLocator->getFilterMapper($filter);
-            $filterMapper($filter, $boolQuery);
+            $this->filterMapper->mapFilter($filter, $boolQuery);
         }
     }
 
     private function mapSortsOrders(Specification $specification, Query $query): void
     {
         foreach ($specification->getSortOrders() as $sortOrder) {
-            /** @var SortOrderMapper $sortOrderMapper */
-            $sortOrderMapper = $this->sortOrderMapperLocator->getSortOrderMapper($sortOrder);
-            $sortOrderMapper($sortOrder, $query);
+            $this->sortOrderMapper->mapSortOrder($sortOrder, $query);
         }
     }
 

@@ -12,5 +12,5 @@ interface FilterMapper
     /**
      * Maps filter to query.
      */
-    public function __invoke(object $filter, BoolQuery $query): void;
+    public function mapFilter(object $filter, BoolQuery $query): void;
 }
