@@ -1,5 +1,5 @@
 brouzie_specificator:
-    sources:
+    repositories:
         product:
             source: elastica
             elastica:
