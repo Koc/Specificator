@@ -8,12 +8,7 @@ namespace Brouzie\Specificator\Subscriber;
 interface FilterSubscriber
 {
     /**
-     *     return [
-     *         PriceRangeFilter::class => 'mapPriceRangeFilter',
-     *         StockFilter::class => 'mapStockFilter',
-     *     ]
-     *
-     * @return array
+     * @return FilterSubscription[]
      */
-    public static function getSubscribedFilters(): array;
+    public static function getSubscribedFilters(): iterable;
 }

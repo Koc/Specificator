@@ -302,9 +302,11 @@ use App\Query\Specification\Filter\PriceRange;
 use App\Query\Specification\Filter\Sku;
 use App\Query\Specification\Schema\Product;
 use Brouzie\Specificator\Subscriber\FilterSubscriber;
+use Brouzie\Specificator\Subscriber\FilterSubscription;
 use Brouzie\Specificator\Subscriber\ResultSubscriber;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Specification;
+use Brouzie\Specificator\Subscriber\ResultSubscription;
 use Doctrine\ORM\QueryBuilder;
 use Elastica\Aggregation\Terms;
 use Elastica\Query;
@@ -314,11 +316,11 @@ use Elastica\Query\Term;
 
 class FilterMapper implements FilterSubscriber
 {
-    public static function getSubscribedFilters(): array
+    public static function getSubscribedFilters(): iterable
     {
         return [
-            Sku::class => 'mapSkuFilter',
-            PriceRange::class => 'mapPriceFilter',
+            new FilterSubscription(Sku::class, 'mapSkuFilter'),
+            new FilterSubscription(PriceRange::class, 'mapPriceFilter'),
         ];
     }
 
@@ -351,14 +353,9 @@ class ResultBuilder implements ResultSubscriber
 {
     private $inventoryRepository;
 
-    public static function getSubscribedResultItems(): array
+    public static function getSubscribedResultItems(): iterable
     {
-        return [
-            ProductItem::class => [
-                self::STAGE_QUERY => 'queryProductItem',
-                self::STAGE_RESULT => 'buildProductItem',
-            ],
-        ];
+        yield new ResultSubscription(ProductItem::class, 'queryProductItem', 'buildProductItem');
     }
 
     public function __construct(QueryRepository $inventoryRepository)
