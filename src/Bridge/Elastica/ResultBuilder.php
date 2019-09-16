@@ -7,7 +7,7 @@ use Elastica\ResultSet;
 
 interface ResultBuilder
 {
-    public function applyQueryStage(Query $query): void;
+    public function modifyQuery(Query $query): void;
 
     public function hydrateItems(ResultSet $resultSet): iterable;
 }

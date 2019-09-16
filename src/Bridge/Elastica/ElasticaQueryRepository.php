@@ -43,7 +43,7 @@ class ElasticaQueryRepository implements QueryRepository
         $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
 
         $query = $this->createQuery();
-        $resultBuilder->applyQueryStage($query);
+        $resultBuilder->modifyQuery($query);
 
         $this->mapFilters($specification, $query->getQuery());
         $this->mapSortsOrders($specification, $query);

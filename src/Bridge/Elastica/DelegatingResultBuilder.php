@@ -7,19 +7,19 @@ use Elastica\ResultSet;
 
 class DelegatingResultBuilder implements ResultBuilder
 {
-    private $queryStage;
+    private $queryModifier;
     private $hydrator;
 
-    public function __construct(?callable $queryStage, callable $hydrator)
+    public function __construct(?callable $queryModifier, callable $hydrator)
     {
-        $this->queryStage = $queryStage;
+        $this->queryModifier = $queryModifier;
         $this->hydrator = $hydrator;
     }
 
-    public function applyQueryStage(Query $query): void
+    public function modifyQuery(Query $query): void
     {
-        if (null !== $this->hydrator) {
-            ($this->hydrator)($query);
+        if (null !== $this->queryModifier) {
+            ($this->queryModifier)($query);
         }
     }
 
