@@ -3,7 +3,6 @@
 namespace Brouzie\Specificator\Bridge\Doctrine\ORM;
 
 use Brouzie\Specificator\Bridge\Doctrine\ORM\ResultBuilder\ResultStageResultBuilder;
-use Brouzie\Specificator\Locator\FilterMapperLocator;
 use Brouzie\Specificator\Locator\PaginationMapperLocator;
 use Brouzie\Specificator\Locator\ResultBuilderLocator;
 use Brouzie\Specificator\Locator\SortOrderMapperLocator;
@@ -19,28 +18,23 @@ use Doctrine\ORM\QueryBuilder;
 class DoctrineOrmQueryRepository
 {
     private $managerRegistry;
-
     private $entityClass;
-
-    private $filterMapperLocator;
-
+    private $filterMapper;
     private $sortOrderMapperLocator;
-
     private $paginationMapperLocator;
-
     private $resultBuilderLocator;
 
     public function __construct(
         ManagerRegistry $managerRegistry,
         string $entityClass,
-        FilterMapperLocator $filterMapperLocator,
+        FilterMapper $filterMapper,
         SortOrderMapperLocator $sortOrderMapperLocator,
         PaginationMapperLocator $paginationMapperLocator,
         ResultBuilderLocator $resultBuilderLocator
     ) {
         $this->managerRegistry = $managerRegistry;
         $this->entityClass = $entityClass;
-        $this->filterMapperLocator = $filterMapperLocator;
+        $this->filterMapper = $filterMapper;
         $this->sortOrderMapperLocator = $sortOrderMapperLocator;
         $this->paginationMapperLocator = $paginationMapperLocator;
         $this->resultBuilderLocator = $resultBuilderLocator;
@@ -74,9 +68,7 @@ class DoctrineOrmQueryRepository
     private function mapFilters(Specification $specification, QueryBuilder $queryBuilder): void
     {
         foreach ($specification->getFilters() as $filter) {
-            /** @var FilterMapper $filterMapper */
-            $filterMapper = $this->filterMapperLocator->getFilterMapper($filter);
-            $filterMapper($filter, $queryBuilder);
+            $this->filterMapper->mapFilter($filter, $queryBuilder);
         }
     }
 

@@ -9,5 +9,5 @@ use Doctrine\ORM\QueryBuilder;
  */
 interface FilterMapper
 {
-    public function __invoke(object $filter, QueryBuilder $queryBuilder): void;
+    public function mapFilter(object $filter, QueryBuilder $queryBuilder): void;
 }
