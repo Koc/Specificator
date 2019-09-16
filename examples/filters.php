@@ -462,7 +462,7 @@ class GetProducts
 
         return new GetProductsResponse(
             $result->getItems(),
-            $result->getTotalItemsCount(),
+            $result->getItemsCount(),
             $categoryIdAggregation->getItems()
         );
     }

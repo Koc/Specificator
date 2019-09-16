@@ -3,8 +3,9 @@
 namespace Brouzie\Specificator\Bridge\Doctrine\ORM;
 
 use Brouzie\Specificator\Bridge\Doctrine\ORM\ResultBuilder\ResultStageResultBuilder;
+use Brouzie\Specificator\Bridge\Elastica\ResultBuilder;
 use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
-use Brouzie\Specificator\Subscriber\ResultBuilderLocator;
+use Brouzie\Specificator\Bridge\Elastica\ResultBuilderLocator;
 use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
 use Doctrine\Common\Persistence\ManagerRegistry;
@@ -41,7 +42,7 @@ class DoctrineOrmQueryRepository
 
     public function query(Specification $specification, string $resultItemClass): Result
     {
-        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
+        $resultBuilder = $this->getResultBuilder($resultItemClass);
 
         $queryBuilder = $this->createQueryBuilder();
         if ($queryStageResultBuilder = $resultBuilder->getQueryStage()) {
@@ -89,7 +90,7 @@ class DoctrineOrmQueryRepository
     private function buildResult(array $queryResult, int $paginationResult, string $resultItemClass): Result
     {
         /** @var ResultStageResultBuilder $resultBuilder */
-        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
+        $resultBuilder = $this->getResultBuilder($resultItemClass);
 
         $items = [];
         foreach ($queryResult as $doctrineResultItem) {
@@ -106,5 +107,10 @@ class DoctrineOrmQueryRepository
         $entityRepository = $entityManager->getRepository($this->entityClass);
 
         return $entityRepository->createQueryBuilder('entity');
+    }
+
+    private function getResultBuilder(string $resultItemClass): ResultBuilder
+    {
+        return $this->resultBuilderLocator->getResultBuilder($resultItemClass);
     }
 }

@@ -8,7 +8,6 @@ use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
 use Brouzie\Specificator\Subscriber\FilterMapperLocator;
 use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
-use Brouzie\Specificator\Subscriber\ResultBuilderLocator;
 use Brouzie\Specificator\Subscriber\SortOrderMapperLocator;
 use Elastica\Query;
 use Elastica\ResultSet;
@@ -20,13 +19,9 @@ use Elastica\SearchableInterface;
 class ElasticaQueryRepository implements QueryRepository
 {
     private $index;
-
     private $filterMapper;
-
     private $sortOrderMapper;
-
     private $paginationMapperLocator;
-
     private $resultBuilderLocator;
 
     public function __construct(
@@ -48,9 +43,7 @@ class ElasticaQueryRepository implements QueryRepository
         $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
 
         $query = $this->createQuery();
-        if ($queryStageResultBuilder = $resultBuilder->getQueryStage()) {
-            $queryStageResultBuilder($query);
-        }
+        $resultBuilder->applyQueryStage($query);
 
         $this->mapFilters($specification, $query->getQuery());
         $this->mapSortsOrders($specification, $query);
@@ -58,7 +51,14 @@ class ElasticaQueryRepository implements QueryRepository
 
         $resultSet = $this->index->search($query);
 
-        return $this->buildResult($resultSet, $resultBuilder->getResultStage());
+        $items = [];
+        foreach ($resultBuilder->hydrateItems($resultSet) as $item) {
+            $items[] = $item;
+        }
+
+        //TODO: provide support of the aggregations (query, hydrate)
+
+        return new Result($items, $resultSet->getTotalHits(), []);
     }
 
     private function mapFilters(Specification $specification, Query\BoolQuery $boolQuery): void
@@ -81,14 +81,6 @@ class ElasticaQueryRepository implements QueryRepository
         /** @var QueryStageSlicer $paginationMapper */
         $paginationMapper = $this->paginationMapperLocator->getPaginationMapper($pagination);
         $paginationMapper($pagination, $query);
-    }
-
-    private function buildResult(ResultSet $resultSet, callable $resultStageResultBuilder): Result
-    {
-        return new Result(
-            $resultStageResultBuilder($resultSet->getResults()),
-            $resultSet->getTotalHits()
-        );
     }
 
     private function createQuery(): Query

@@ -8,20 +8,18 @@ namespace Brouzie\Specificator;
 class Result
 {
     private $items;
-
-    private $totalItemsCount;
-
+    private $itemsCount;
     private $aggregations;
 
     /**
      * @param object[] $items
-     * @param int $totalItemsCount
+     * @param int $itemsCount
      * @param object[] $aggregations
      */
-    public function __construct(array $items, int $totalItemsCount, array $aggregations)
+    public function __construct(array $items, int $itemsCount, array $aggregations)
     {
         $this->items = $items;
-        $this->totalItemsCount = $totalItemsCount;
+        $this->itemsCount = $itemsCount;
         $this->aggregations = $aggregations;
     }
 
@@ -33,9 +31,9 @@ class Result
         return $this->items;
     }
 
-    public function getTotalItemsCount(): int
+    public function getItemsCount(): int
     {
-        return $this->totalItemsCount;
+        return $this->itemsCount;
     }
 
     public function getAggregation(string $name): object

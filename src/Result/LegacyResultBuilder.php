@@ -4,8 +4,9 @@ namespace Brouzie\Specificator\Result;
 
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
+ * @deprecated Use specific result builder
  */
-class ResultBuilder
+class LegacyResultBuilder
 {
     private $queryStage;
 
