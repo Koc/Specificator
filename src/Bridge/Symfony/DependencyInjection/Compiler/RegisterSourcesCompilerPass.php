@@ -1,6 +1,6 @@
 <?php
 
-namespace Brouzie\Specificator\Bridge\Symfony;
+namespace Brouzie\Specificator\Bridge\Symfony\DependencyInjection\Compiler;
 
 //TODO: does it needed?
 class RegisterSourcesCompilerPass
