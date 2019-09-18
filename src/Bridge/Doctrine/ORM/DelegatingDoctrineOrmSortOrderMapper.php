@@ -10,7 +10,7 @@ use Psr\Container\NotFoundExceptionInterface;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-class DelegatingSortOrderMapper implements SortOrderMapper
+class DelegatingDoctrineOrmSortOrderMapper implements DoctrineOrmSortOrderMapper
 {
     private $container;
 

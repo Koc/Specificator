@@ -7,7 +7,7 @@ use Elastica\Query;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-interface SortOrderMapper
+interface ElasticaSortOrderMapper
 {
     /**
      * Maps sort to query.

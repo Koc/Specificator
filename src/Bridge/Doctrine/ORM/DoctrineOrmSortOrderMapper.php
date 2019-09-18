@@ -7,7 +7,7 @@ use Doctrine\ORM\QueryBuilder;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-interface FilterMapper
+interface DoctrineOrmSortOrderMapper
 {
-    public function mapFilter(object $filter, QueryBuilder $queryBuilder): void;
+    public function mapSortOrder(object $sortOrder, QueryBuilder $queryBuilder): void;
 }

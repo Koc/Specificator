@@ -7,7 +7,7 @@ use Elastica\Query\BoolQuery;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-interface FilterMapper
+interface ElasticaFilterMapper
 {
     /**
      * Maps filter to query.

@@ -5,9 +5,9 @@ namespace Brouzie\Specificator\Bridge\Elastica;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-class ResultBuilderLocator
+class ElasticaResultBuilderLocator
 {
-    public function getResultBuilder(string $resultClass): ResultBuilder
+    public function getResultBuilder(string $resultClass): ElasticaResultBuilder
     {
         //TODO: provide implementation based on Psr-11.
     }

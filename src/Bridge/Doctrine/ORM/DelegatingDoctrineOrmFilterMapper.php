@@ -10,7 +10,7 @@ use Psr\Container\NotFoundExceptionInterface;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-class DelegatingFilterMapper implements FilterMapper
+class DelegatingDoctrineOrmFilterMapper implements DoctrineOrmFilterMapper
 {
     private $container;
 

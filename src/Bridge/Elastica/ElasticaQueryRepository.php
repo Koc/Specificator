@@ -26,10 +26,10 @@ class ElasticaQueryRepository implements QueryRepository
 
     public function __construct(
         SearchableInterface $index,
-        FilterMapper $filterMapper,
-        SortOrderMapper $sortOrderMapper,
+        ElasticaFilterMapper $filterMapper,
+        ElasticaSortOrderMapper $sortOrderMapper,
         PaginationMapperLocator $paginationMapperLocator,
-        ResultBuilderLocator $resultBuilderLocator
+        ElasticaResultBuilderLocator $resultBuilderLocator
     ) {
         $this->index = $index;
         $this->filterMapper = $filterMapper;

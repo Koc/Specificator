@@ -5,7 +5,10 @@ namespace Brouzie\Specificator\Bridge\Elastica;
 use Elastica\Query;
 use Elastica\ResultSet;
 
-class DelegatingResultBuilder implements ResultBuilder
+/**
+ * @author Konstantin Myakshin <molodchick@gmail.com>
+ */
+class DelegatingElasticaResultBuilder implements ElasticaResultBuilder
 {
     private $queryModifier;
     private $hydrator;
