@@ -313,7 +313,7 @@ use Elastica\Query\BoolQuery;
 use Elastica\Query\Range;
 use Elastica\Query\Term;
 
-class FilterMapper implements MappingSubscriber
+class ProductFilterMapper implements MappingSubscriber
 {
     public static function getSubscriptions(): iterable
     {
@@ -348,7 +348,7 @@ class FilterMapper implements MappingSubscriber
     }
 }
 
-class ResultBuilder implements MappingSubscriber
+class ProductResultBuilder implements MappingSubscriber
 {
     private $inventoryRepository;
 
@@ -431,8 +431,12 @@ use App\Query\Http\Request\GetProductsQuery;
 use App\Query\Result\ProductCategoryAggregationResult;
 use App\Query\Result\ProductItem;
 use App\Query\Specification\Aggregation\CategoryIdAggregation;
+use App\Query\Specification\Mapper\Elastica\ProductFilterMapper;
+use App\Query\Specification\Mapper\Elastica\ProductResultBuilder;
 use Brouzie\Specificator\Http\SpecificationFactory;
+use Brouzie\Specificator\PublicQueryRepository;
 use Brouzie\Specificator\QueryRepository;
+use Brouzie\Specificator\Specification;
 
 class GetProducts
 {
@@ -440,7 +444,7 @@ class GetProducts
 
     private $queryRepository;
 
-    public function __construct(SpecificationFactory $specificationFactory, QueryRepository $queryRepository)
+    public function __construct(SpecificationFactory $specificationFactory, ProductQueryRepository $queryRepository)
     {
         $this->specificationFactory = $specificationFactory;
         $this->queryRepository = $queryRepository;
@@ -451,7 +455,7 @@ class GetProducts
         $specification = $this->specificationFactory->createSpecification($request);
         $specification->addAggregation('category_ids', new CategoryIdAggregation(10));
 
-        $result = $this->queryRepository->query($specification, ProductItem::class);
+        $result = $this->queryRepository->getProductItems($specification);
 
         /** @var ProductCategoryAggregationResult $categoryIdAggregation */
         $categoryIdAggregation = $result->getAggregation('category_ids');
@@ -483,6 +487,32 @@ class GetProductsResponse
         $this->totalCount = $totalCount;
         $this->categoryIdAggregation = $categoryIdAggregation;
     }
+}
 
+class ProductQueryRepository implements PublicQueryRepository
+{
+    private $queryRepository;
 
+    public static function getMappersClasses(): array
+    {
+        return [
+            //TODO: this methods looks strange here. Consider to remove it + remove PublicQueryRepository
+            // or extract ProductQueryRepository interface
+            ProductFilterMapper::class,
+            ProductResultBuilder::class,
+        ];
+    }
+
+    public function __construct(QueryRepository $queryRepository)
+    {
+        $this->queryRepository = $queryRepository;
+    }
+
+    /**
+     * @return ProductItem[]
+     */
+    public function getProductItems(Specification $specification): array
+    {
+
+    }
 }
