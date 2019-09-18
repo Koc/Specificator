@@ -2,7 +2,7 @@
 
 namespace Brouzie\Specificator;
 
-use Brouzie\Specificator\Pagination\PagePagination;
+use Brouzie\Specificator\Pagination\LimitOffsetPagination;
 
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
@@ -10,9 +10,7 @@ use Brouzie\Specificator\Pagination\PagePagination;
 class Specification
 {
     private $filtersBag;
-
     private $sortOrdersBag;
-
     private $pagination;
 
     /**
@@ -32,7 +30,7 @@ class Specification
             $this->addSortOrder($sortOrder);
         }
 
-        $this->setPagination($pagination ?: new PagePagination(20, 1));
+        $this->setPagination($pagination ?: LimitOffsetPagination::fromPage(20, 1));
     }
 
     public function addFilter(object $filter): void
@@ -73,6 +71,6 @@ class Specification
 
     public function getPagination(): object
     {
-        //TODO: implement
+        return $this->pagination;
     }
 }

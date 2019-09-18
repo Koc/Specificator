@@ -438,10 +438,9 @@ use Brouzie\Specificator\PublicQueryRepository;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Specification;
 
-class GetProducts
+class GetProductsController
 {
     private $specificationFactory;
-
     private $queryRepository;
 
     public function __construct(SpecificationFactory $specificationFactory, ProductQueryRepository $queryRepository)

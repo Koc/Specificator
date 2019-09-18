@@ -8,7 +8,6 @@ namespace Brouzie\Specificator\Pagination;
 final class CursorPagination
 {
     private $limit;
-
     private $cursor;
 
     public function __construct(int $limit, string $cursor)

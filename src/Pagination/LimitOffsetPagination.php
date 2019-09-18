@@ -8,8 +8,12 @@ namespace Brouzie\Specificator\Pagination;
 final class LimitOffsetPagination
 {
     private $limit;
-
     private $offset;
+
+    public static function fromPage(int $perPage, int $page): self
+    {
+        //FIXME: implement
+    }
 
     public function __construct(int $limit, int $offset)
     {
