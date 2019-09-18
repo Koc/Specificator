@@ -2,6 +2,9 @@
 
 namespace Brouzie\Specificator\Subscriber;
 
+/**
+ * @author Konstantin Myakshin <molodchick@gmail.com>
+ */
 class ResultSubscription
 {
     private $itemClass;

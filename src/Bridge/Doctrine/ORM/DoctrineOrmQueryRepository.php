@@ -3,9 +3,9 @@
 namespace Brouzie\Specificator\Bridge\Doctrine\ORM;
 
 use Brouzie\Specificator\Bridge\Doctrine\ORM\ResultBuilder\ResultStageResultBuilder;
-use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
 use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
+use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -41,8 +41,8 @@ class DoctrineOrmQueryRepository
     public function query(Specification $specification, string $resultItemClass): Result
     {
         $queryBuilder = $this->createQueryBuilder();
-
         $resultBuilder = $this->getResultBuilder($resultItemClass);
+
         $resultBuilder->modifyQuery($queryBuilder);
 
         $this->mapFilters($specification, $queryBuilder);
@@ -53,13 +53,7 @@ class DoctrineOrmQueryRepository
 
         //TODO: implement pagination count query
         $paginationResult = 0;
-
-        $resultBuilder = $this->getResultBuilder($resultItemClass);
-
-        $items = [];
-        foreach ($resultBuilder->hydrateItems($queryResult) as $item) {
-            $items[] = $item;
-        }
+        $items = $this->hydrateItems($resultBuilder, $queryResult);
 
         return new Result($items, $paginationResult, []);
     }
@@ -98,5 +92,15 @@ class DoctrineOrmQueryRepository
     private function getResultBuilder(string $resultItemClass): DoctrineOrmResultBuilder
     {
         return $this->resultBuilderLocator->getResultBuilder($resultItemClass);
+    }
+
+    private function hydrateItems(DoctrineOrmResultBuilder $resultBuilder, $queryResult): array
+    {
+        $items = [];
+        foreach ($resultBuilder->hydrateItems($queryResult) as $item) {
+            $items[] = $item;
+        }
+
+        return $items;
     }
 }

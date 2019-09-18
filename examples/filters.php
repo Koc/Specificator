@@ -301,11 +301,10 @@ use App\Query\Specification\Aggregation\CategoryIdAggregation;
 use App\Query\Specification\Filter\PriceRange;
 use App\Query\Specification\Filter\Sku;
 use App\Query\Specification\Schema\Product;
-use Brouzie\Specificator\Subscriber\FilterSubscriber;
-use Brouzie\Specificator\Subscriber\FilterSubscription;
-use Brouzie\Specificator\Subscriber\ResultSubscriber;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Specification;
+use Brouzie\Specificator\Subscriber\FilterSubscription;
+use Brouzie\Specificator\Subscriber\MappingSubscriber;
 use Brouzie\Specificator\Subscriber\ResultSubscription;
 use Doctrine\ORM\QueryBuilder;
 use Elastica\Aggregation\Terms;
@@ -314,9 +313,9 @@ use Elastica\Query\BoolQuery;
 use Elastica\Query\Range;
 use Elastica\Query\Term;
 
-class FilterMapper implements FilterSubscriber
+class FilterMapper implements MappingSubscriber
 {
-    public static function getSubscribedFilters(): iterable
+    public static function getSubscriptions(): iterable
     {
         return [
             new FilterSubscription(Sku::class, 'mapSkuFilter'),
@@ -349,11 +348,11 @@ class FilterMapper implements FilterSubscriber
     }
 }
 
-class ResultBuilder implements ResultSubscriber
+class ResultBuilder implements MappingSubscriber
 {
     private $inventoryRepository;
 
-    public static function getSubscribedResultItems(): iterable
+    public static function getSubscriptions(): iterable
     {
         yield new ResultSubscription(ProductItem::class, 'queryProductItem', 'buildProductItem');
     }

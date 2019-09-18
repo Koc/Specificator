@@ -5,20 +5,20 @@ namespace Brouzie\Specificator\Subscriber;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-class FilterSubscription
+class SortOrderSubscription
 {
-    private $filterClass;
+    private $sortOrderClass;
     private $mapperMethod;
 
-    public function __construct(string $filterClass, string $mapperMethod)
+    public function __construct(string $sortOrderClass, string $mapperMethod)
     {
-        $this->filterClass = $filterClass;
+        $this->sortOrderClass = $sortOrderClass;
         $this->mapperMethod = $mapperMethod;
     }
 
-    public function getFilterClass(): string
+    public function getSortOrderClass(): string
     {
-        return $this->filterClass;
+        return $this->sortOrderClass;
     }
 
     public function getMapperMethod(): string

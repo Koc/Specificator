@@ -51,11 +51,9 @@ class ElasticaQueryRepository implements QueryRepository
 
         $resultSet = $this->index->search($query);
 
-        $items = [];
-        foreach ($resultBuilder->hydrateItems($resultSet) as $item) {
-            $items[] = $item;
-        }
+        $items = $this->hydrateItems($resultBuilder, $resultSet);
 
+        //TODO: add pagination
         //TODO: provide support of the aggregations (query, hydrate)
 
         return new Result($items, $resultSet->getTotalHits(), []);
@@ -89,5 +87,15 @@ class ElasticaQueryRepository implements QueryRepository
         $query->setQuery(new Query\BoolQuery());
 
         return $query;
+    }
+
+    private function hydrateItems(ElasticaResultBuilder $resultBuilder, $resultSet): array
+    {
+        $items = [];
+        foreach ($resultBuilder->hydrateItems($resultSet) as $item) {
+            $items[] = $item;
+        }
+
+        return $items;
     }
 }
