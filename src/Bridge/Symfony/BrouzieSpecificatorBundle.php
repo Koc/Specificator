@@ -17,10 +17,9 @@ class BrouzieSpecificatorBundle extends Bundle
     {
         parent::build($container);
 
-        $this
-            ->getExtension($container)
-            ->addSourceFactory(new DoctrineOrmSourceFactory())
-            ->addSourceFactory(new ElasticaSourceFactory());
+        $extension = $this->getExtension($container);
+        $extension->addSourceFactory('doctrine_orm', new DoctrineOrmSourceFactory());
+        $extension->addSourceFactory('elastica', new ElasticaSourceFactory());
     }
 
     private function getExtension(ContainerBuilder $container): BrouzieSpecificatorExtension

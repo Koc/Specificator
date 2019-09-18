@@ -12,7 +12,7 @@ class ElasticaSourceFactory implements SourceFactory
     {
         $builder
             ->children()
-                ->scalarNode('searchable')->notNull()->end()
+                ->scalarNode('searchable_id')->notNull()->end()
             ->end();
     }
 

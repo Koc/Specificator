@@ -7,9 +7,7 @@ use App\Query\Http\SpecificationBuilder\LimitOffsetPaginatedRequest;
 class GetProductsFilter
 {
     public $sku;
-
     public $priceFrom;
-
     public $priceTo;
 }
 
@@ -19,11 +17,8 @@ class GetProductsQuery implements LimitOffsetPaginatedRequest
      * @var GetProductsFilter
      */
     public $filter;
-
     public $sort = [];
-
     public $limit = 20;
-
     public $offset = 0;
 
     public function getLimit(): int
@@ -130,7 +125,6 @@ class Sku
 class PriceRange
 {
     private $from;
-
     private $to;
 
     public function __construct(int $from, int $to)
@@ -206,11 +200,8 @@ namespace App\Query\Result;
 class ProductItem
 {
     private $id;
-
     private $name;
-
     private $sku;
-
     private $qty;
 
     public function __construct(int $id, string $name, string $sku, int $qty)
@@ -263,7 +254,6 @@ class ProductCategoryAggregationResult
 class ProductCategoryAggregationItem
 {
     private $categoryId;
-
     private $productsCount;
 
     public function __construct(int $categoryId, int $productsCount)
@@ -470,9 +460,7 @@ class GetProductsController
 class GetProductsResponse
 {
     private $items;
-
     private $totalCount;
-
     private $categoryIdAggregation;
 
     /**

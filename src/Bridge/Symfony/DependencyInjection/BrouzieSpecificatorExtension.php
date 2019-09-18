@@ -26,10 +26,8 @@ class BrouzieSpecificatorExtension extends Extension implements PrependExtension
         return new Configuration($this->factories);
     }
 
-    public function addSourceFactory(SourceFactory $factory): self
+    public function addSourceFactory(string $name, SourceFactory $factory): void
     {
-        $this->factories[] = $factory;
-
-        return $this;
+        $this->factories[$name] = $factory;
     }
 }
