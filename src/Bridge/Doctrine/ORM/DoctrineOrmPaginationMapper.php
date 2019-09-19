@@ -7,7 +7,7 @@ use Doctrine\ORM\QueryBuilder;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-interface PaginationMapper
+interface DoctrineOrmPaginationMapper
 {
-    public function __invoke(object $pagination, QueryBuilder $queryBuilder): void;
+    public function sliceQuery(object $pagination, QueryBuilder $queryBuilder): void;
 }

@@ -2,13 +2,9 @@
 
 namespace Brouzie\Specificator\Bridge\Elastica;
 
-use Brouzie\Specificator\Bridge\Elastica\Paginator\QueryStageSlicer;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
-use Brouzie\Specificator\Subscriber\FilterMapperLocator;
-use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
-use Brouzie\Specificator\Subscriber\SortOrderMapperLocator;
 use Elastica\Query;
 use Elastica\ResultSet;
 use Elastica\SearchableInterface;
@@ -28,7 +24,7 @@ class ElasticaQueryRepository implements QueryRepository
         SearchableInterface $index,
         ElasticaFilterMapper $filterMapper,
         ElasticaSortOrderMapper $sortOrderMapper,
-        PaginationMapperLocator $paginationMapperLocator,
+        DelegatingPaginationMapper $paginationMapperLocator,
         ElasticaResultBuilderLocator $resultBuilderLocator
     ) {
         $this->index = $index;
@@ -40,23 +36,33 @@ class ElasticaQueryRepository implements QueryRepository
 
     public function query(Specification $specification, string $resultItemClass): Result
     {
-        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
-
         $query = $this->createQuery();
+
+        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
         $resultBuilder->modifyQuery($query);
 
         $this->mapFilters($specification, $query->getQuery());
         $this->mapSortsOrders($specification, $query);
-        $this->mapPagination($specification, $query);
+
+        $pagination = $specification->getPagination();
+        $paginationMapper = $this->paginationMapperLocator->getPaginationMapper($pagination);
+        $paginationMapper->sliceQuery($pagination, $query);
 
         $resultSet = $this->index->search($query);
 
         $items = $this->hydrateItems($resultBuilder, $resultSet);
 
-        //TODO: add pagination
         //TODO: provide support of the aggregations (query, hydrate)
 
-        return new Result($items, $resultSet->getTotalHits(), []);
+        return new Result($items, $paginationMapper->getResultsCount($resultSet), []);
+    }
+
+    private function createQuery(): Query
+    {
+        $query = new Query();
+        $query->setQuery(new Query\BoolQuery());
+
+        return $query;
     }
 
     private function mapFilters(Specification $specification, Query\BoolQuery $boolQuery): void
@@ -71,22 +77,6 @@ class ElasticaQueryRepository implements QueryRepository
         foreach ($specification->getSortOrders() as $sortOrder) {
             $this->sortOrderMapper->mapSortOrder($sortOrder, $query);
         }
-    }
-
-    private function mapPagination(Specification $specification, Query $query): void
-    {
-        $pagination = $specification->getPagination();
-        /** @var QueryStageSlicer $paginationMapper */
-        $paginationMapper = $this->paginationMapperLocator->getPaginationMapper($pagination);
-        $paginationMapper($pagination, $query);
-    }
-
-    private function createQuery(): Query
-    {
-        $query = new Query();
-        $query->setQuery(new Query\BoolQuery());
-
-        return $query;
     }
 
     private function hydrateItems(ElasticaResultBuilder $resultBuilder, $resultSet): array

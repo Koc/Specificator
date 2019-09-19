@@ -27,8 +27,8 @@ class DoctrineOrmQueryRepository
         string $entityClass,
         DoctrineOrmFilterMapper $filterMapper,
         DoctrineOrmSortOrderMapper $sortOrderMapper,
-        PaginationMapperLocator $paginationMapperLocator,
-        ResultBuilderLocator $resultBuilderLocator
+        DelegatingPaginationMapper $paginationMapperLocator,
+        DoctrineOrmResultBuilderLocator $resultBuilderLocator
     ) {
         $this->managerRegistry = $managerRegistry;
         $this->entityClass = $entityClass;
@@ -41,21 +41,36 @@ class DoctrineOrmQueryRepository
     public function query(Specification $specification, string $resultItemClass): Result
     {
         $queryBuilder = $this->createQueryBuilder();
-        $resultBuilder = $this->getResultBuilder($resultItemClass);
 
+        $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
         $resultBuilder->modifyQuery($queryBuilder);
 
         $this->mapFilters($specification, $queryBuilder);
         $this->mapSortsOrders($specification, $queryBuilder);
-        $this->mapPagination($specification, $queryBuilder);
+
+        $pagination = $specification->getPagination();
+        $paginationMapper = $this->paginationMapperLocator->getPaginationMapper($pagination);
+        $paginationMapper->sliceQuery($pagination, $queryBuilder);
 
         $queryResult = $queryBuilder->getQuery()->getResult();
 
-        //TODO: implement pagination count query
-        $paginationResult = 0;
+        $itemsCount = 0;
+        if ($paginationMapper instanceof DoctrineOrmCountablePaginationMapper) {
+            $itemsCount = $paginationMapper->getItemsCount($queryBuilder);
+        }
+
         $items = $this->hydrateItems($resultBuilder, $queryResult);
 
-        return new Result($items, $paginationResult, []);
+        return new Result($items, $itemsCount, []);
+    }
+
+    private function createQueryBuilder(): QueryBuilder
+    {
+        $entityManager = $this->managerRegistry->getManagerForClass($this->entityClass);
+        /** @var EntityRepository $entityRepository */
+        $entityRepository = $entityManager->getRepository($this->entityClass);
+
+        return $entityRepository->createQueryBuilder('entity');
     }
 
     private function mapFilters(Specification $specification, QueryBuilder $queryBuilder): void
@@ -70,28 +85,6 @@ class DoctrineOrmQueryRepository
         foreach ($specification->getSortOrders() as $sortOrder) {
             $this->sortOrderMapper->mapSortOrder($sortOrder, $queryBuilder);
         }
-    }
-
-    private function mapPagination(Specification $specification, QueryBuilder $queryBuilder): void
-    {
-        $pagination = $specification->getPagination();
-        /** @var PaginationMapper $paginationMapper */
-        $paginationMapper = $this->paginationMapperLocator->getPaginationMapper($pagination);
-        $paginationMapper($pagination, $queryBuilder);
-    }
-
-    private function createQueryBuilder(): QueryBuilder
-    {
-        $entityManager = $this->managerRegistry->getManagerForClass($this->entityClass);
-        /** @var EntityRepository $entityRepository */
-        $entityRepository = $entityManager->getRepository($this->entityClass);
-
-        return $entityRepository->createQueryBuilder('entity');
-    }
-
-    private function getResultBuilder(string $resultItemClass): DoctrineOrmResultBuilder
-    {
-        return $this->resultBuilderLocator->getResultBuilder($resultItemClass);
     }
 
     private function hydrateItems(DoctrineOrmResultBuilder $resultBuilder, $queryResult): array
