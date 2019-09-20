@@ -5,6 +5,7 @@ namespace Brouzie\Specificator\Bridge\Doctrine\ORM;
 use Brouzie\Specificator\Bridge\Doctrine\ORM\ResultBuilder\ResultStageResultBuilder;
 use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
+use Brouzie\Specificator\SpecificationExecutor;
 use Brouzie\Specificator\Subscriber\PaginationMapperLocator;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityRepository;
@@ -13,7 +14,7 @@ use Doctrine\ORM\QueryBuilder;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-class DoctrineOrmQueryRepository
+class DoctrineOrmSpecificationExecutor implements SpecificationExecutor
 {
     private $managerRegistry;
     private $entityClass;
@@ -38,7 +39,7 @@ class DoctrineOrmQueryRepository
         $this->resultBuilderLocator = $resultBuilderLocator;
     }
 
-    public function query(Specification $specification, string $resultItemClass): Result
+    public function execute(Specification $specification, string $resultItemClass): Result
     {
         $queryBuilder = $this->createQueryBuilder();
 

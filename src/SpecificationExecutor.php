@@ -8,4 +8,6 @@ namespace Brouzie\Specificator;
 interface SpecificationExecutor
 {
     public function execute(Specification $specification, string $resultItemClass): Result;
+
+    //TODO: add extra interface for specifications
 }
