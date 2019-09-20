@@ -24,7 +24,7 @@ class SpecificationFactory
         $specification = new Specification();
 
         foreach ($this->specificationBuilders as $specificationBuilder) {
-            $specificationBuilder($specification, $request);
+            $specificationBuilder->buildSpecification($specification, $request);
         }
 
         return $specification;

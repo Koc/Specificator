@@ -9,5 +9,5 @@ use Brouzie\Specificator\Specification;
  */
 interface SpecificationBuilder
 {
-    public function __invoke(Specification $specification, object $request): void;
+    public function buildSpecification(Specification $specification, object $request): void;
 }

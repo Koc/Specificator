@@ -2,7 +2,7 @@
 
 namespace Brouzie\Specificator\Bridge\Elastica;
 
-use Brouzie\Specificator\QueryRepository;
+use Brouzie\Specificator\SpecificationExecutor;
 use Brouzie\Specificator\Result;
 use Brouzie\Specificator\Specification;
 use Elastica\Query;
@@ -12,7 +12,7 @@ use Elastica\SearchableInterface;
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
  */
-class ElasticaQueryRepository implements QueryRepository
+class ElasticaSpecificationExecutor implements SpecificationExecutor
 {
     private $index;
     private $filterMapper;
@@ -34,7 +34,7 @@ class ElasticaQueryRepository implements QueryRepository
         $this->resultBuilderLocator = $resultBuilderLocator;
     }
 
-    public function query(Specification $specification, string $resultItemClass): Result
+    public function execute(Specification $specification, string $resultItemClass): Result
     {
         $query = $this->createQuery();
 

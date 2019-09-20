@@ -8,16 +8,19 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class ElasticaSourceFactory implements SourceFactory
 {
-    public function registerSourceConfig(NodeDefinition $builder)
+    private const SEARCHABLE_ID = 'searchable_id';
+
+    public function defineConfig(NodeDefinition $builder): void
     {
         $builder
             ->children()
-                ->scalarNode('searchable_id')->notNull()->end()
+                ->scalarNode(self::SEARCHABLE_ID)->notNull()->end()
             ->end();
     }
 
-    public function registerSource(ContainerBuilder $container, $id, $config)
+    public function registerSource(ContainerBuilder $container, string $id, array $config): void
     {
         // register definition
+        $config[self::SEARCHABLE_ID];
     }
 }

@@ -8,7 +8,7 @@ namespace Brouzie\Specificator\Subscriber;
 interface MappingSubscriber
 {
     /**
-     * @return FilterSubscription[]|ResultSubscription[]|SortOrderSubscription[]
+     * @return AggregationSubscriber[]|FilterSubscription[]|ResultSubscription[]|SortOrderSubscription[]
      */
     public static function getSubscriptions(): iterable;
 }

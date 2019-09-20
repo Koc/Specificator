@@ -7,5 +7,5 @@ namespace Brouzie\Specificator;
  */
 interface QueryRepository
 {
-    public function query(Specification $specification, string $resultItemClass): Result;
+    public static function getMappersClasses(): array;
 }

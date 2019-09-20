@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  */
 interface SourceFactory
 {
-    public function registerSourceConfig(NodeDefinition $builder);
+    public function defineConfig(NodeDefinition $builder): void;
 
-    public function registerSource(ContainerBuilder $container, $id, $config);
+    public function registerSource(ContainerBuilder $container, string $id, array $config): void;
 }

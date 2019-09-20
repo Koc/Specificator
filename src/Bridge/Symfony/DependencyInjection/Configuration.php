@@ -28,7 +28,7 @@ class Configuration implements ConfigurationInterface
         //TODO: add sources (source: doctrine, config: {entity: App\Product\Domain\AggregateRoot\Product}
 
         foreach ($this->factories as $factory) {
-            $factory->registerSourceConfig($rootNode);
+            $factory->defineConfig($rootNode);
         }
     }
 }

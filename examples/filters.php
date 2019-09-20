@@ -233,24 +233,6 @@ class ProductItem
     }
 }
 
-class ProductCategoryAggregationResult
-{
-    private $items;
-
-    public function __construct(ProductCategoryAggregationItem ...$items)
-    {
-        $this->items = $items;
-    }
-
-    /**
-     * @return ProductCategoryAggregationItem[]
-     */
-    public function getItems(): array
-    {
-        return $this->items;
-    }
-}
-
 class ProductCategoryAggregationItem
 {
     private $categoryId;
@@ -291,8 +273,9 @@ use App\Query\Specification\Aggregation\CategoryIdAggregation;
 use App\Query\Specification\Filter\PriceRange;
 use App\Query\Specification\Filter\Sku;
 use App\Query\Specification\Schema\Product;
-use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Specification;
+use Brouzie\Specificator\SpecificationExecutor;
+use Brouzie\Specificator\Subscriber\AggregationSubscriber;
 use Brouzie\Specificator\Subscriber\FilterSubscription;
 use Brouzie\Specificator\Subscriber\MappingSubscriber;
 use Brouzie\Specificator\Subscriber\ResultSubscription;
@@ -347,7 +330,7 @@ class ProductResultBuilder implements MappingSubscriber
         yield new ResultSubscription(ProductItem::class, 'queryProductItem', 'buildProductItem');
     }
 
-    public function __construct(QueryRepository $inventoryRepository)
+    public function __construct(SpecificationExecutor $inventoryRepository)
     {
         $this->inventoryRepository = $inventoryRepository;
     }
@@ -370,7 +353,7 @@ class ProductResultBuilder implements MappingSubscriber
         $productIds = array_column($result, 'id');
 
         $getQtySpecification = new Specification([new ProductIdFilter($productIds)]);
-        $qtyItems = $this->inventoryRepository->query($getQtySpecification, ProductQty::class)->getItems();
+        $qtyItems = $this->inventoryRepository->execute($getQtySpecification, ProductQty::class)->getItems();
 
         $result = [];
         foreach ($result as $row) {
@@ -383,16 +366,11 @@ class ProductResultBuilder implements MappingSubscriber
     }
 }
 
-class CategoryIdAggregator implements AggregationSubscriber
+class CategoryIdAggregator implements MappingSubscriber
 {
-    public static function getSubscribedAggregations(): array
+    public static function getSubscriptions(): iterable
     {
-        return [
-            CategoryIdAggregation::class => [
-                self::STAGE_BUILD_QUERY => 'buildQuery',
-                self::STAGE_HYDRATE_RESULT => 'hydrateResult',
-            ],
-        ];
+        yield new AggregationSubscriber(CategoryIdAggregation::class, 'buildQuery', 'hydrateResult');
     }
 
     public function buildQuery(CategoryIdAggregation $aggregation, Query $query, string $prefix): void
@@ -404,29 +382,32 @@ class CategoryIdAggregator implements AggregationSubscriber
         $query->addAggregation($agg);
     }
 
-    public function hydrateResult(array $aggs): ProductCategoryAggregationResult
+    /**
+     * @return ProductCategoryAggregationItem[]
+     */
+    public function hydrateResult(array $aggs): array
     {
         $items = [];
         foreach ($aggs['categories']['buckets'] as $bucket) {
             $items[] = new ProductCategoryAggregationItem($bucket['key'], $bucket['doc_count']);
         }
 
-        return new ProductCategoryAggregationResult(...$items);
+        return $items;
     }
 }
 
 namespace App\Controller;
 
 use App\Query\Http\Request\GetProductsQuery;
-use App\Query\Result\ProductCategoryAggregationResult;
+use App\Query\Result\ProductCategoryAggregationItem;
 use App\Query\Result\ProductItem;
 use App\Query\Specification\Aggregation\CategoryIdAggregation;
 use App\Query\Specification\Mapper\Elastica\ProductFilterMapper;
 use App\Query\Specification\Mapper\Elastica\ProductResultBuilder;
 use Brouzie\Specificator\Http\SpecificationFactory;
-use Brouzie\Specificator\PublicQueryRepository;
 use Brouzie\Specificator\QueryRepository;
 use Brouzie\Specificator\Specification;
+use Brouzie\Specificator\SpecificationExecutor;
 
 class GetProductsController
 {
@@ -444,15 +425,14 @@ class GetProductsController
         $specification = $this->specificationFactory->createSpecification($request);
         $specification->addAggregation('category_ids', new CategoryIdAggregation(10));
 
-        $result = $this->queryRepository->getProductItems($specification);
+        $result = $this->queryRepository->query($specification);
 
-        /** @var ProductCategoryAggregationResult $categoryIdAggregation */
-        $categoryIdAggregation = $result->getAggregation('category_ids');
+        $categoryAggregationItems = $result->getCategoryAggregation();
 
         return new GetProductsResponse(
             $result->getItems(),
-            $result->getItemsCount(),
-            $categoryIdAggregation->getItems()
+            $result->getTotalCount(),
+            $categoryAggregationItems
         );
     }
 }
@@ -474,9 +454,54 @@ class GetProductsResponse
         $this->totalCount = $totalCount;
         $this->categoryIdAggregation = $categoryIdAggregation;
     }
+    //TODO: add getters and typehints
 }
 
-class ProductQueryRepository implements PublicQueryRepository
+class ProductResult
+{
+    private $items;
+    private $totalCount;
+    private $categoryAggregation;
+
+    /**
+     * @param ProductItem[] $items
+     * @param ProductCategoryAggregationItem[] $categoryAggregationItems
+     */
+    public function __construct(array $items, int $totalCount, array $categoryAggregationItems)
+    {
+        $this->items = $items;
+        $this->totalCount = $totalCount;
+        $this->categoryAggregation = $categoryAggregationItems;
+    }
+
+    /**
+     * @return ProductItem[]|
+     */
+    public function getItems(): array
+    {
+        return $this->items;
+    }
+
+    public function getTotalCount(): int
+    {
+        return $this->totalCount;
+    }
+
+    /**
+     * @return ProductCategoryAggregationItem[]
+     */
+    public function getCategoryAggregation(): array
+    {
+        return $this->categoryAggregation;
+    }
+}
+
+interface ProductQueryRepository
+{
+    public function query(Specification $specification): ProductResult;
+}
+
+class DoctrineOrmProductQueryRepository implements ProductQueryRepository, QueryRepository
 {
     private $queryRepository;
 
@@ -490,15 +515,14 @@ class ProductQueryRepository implements PublicQueryRepository
         ];
     }
 
-    public function __construct(QueryRepository $queryRepository)
+    //TODO: add support of the custom query builders
+
+    public function __construct(SpecificationExecutor $queryRepository)
     {
         $this->queryRepository = $queryRepository;
     }
 
-    /**
-     * @return ProductItem[]
-     */
-    public function getProductItems(Specification $specification): array
+    public function query(Specification $specification): ProductResult
     {
 
     }
