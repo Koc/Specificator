@@ -267,7 +267,6 @@ interface Product
 namespace App\Query\Specification\Mapper\Elastica;
 
 use App\Query\Result\ProductCategoryAggregationItem;
-use App\Query\Result\ProductCategoryAggregationResult;
 use App\Query\Result\ProductItem;
 use App\Query\Specification\Aggregation\CategoryIdAggregation;
 use App\Query\Specification\Filter\PriceRange;

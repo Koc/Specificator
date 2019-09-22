@@ -7,5 +7,8 @@ namespace Brouzie\Specificator;
  */
 interface QueryRepository
 {
+    /**
+     * @return string[]
+     */
     public static function getMappersClasses(): array;
 }

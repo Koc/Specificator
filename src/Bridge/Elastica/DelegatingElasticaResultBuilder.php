@@ -2,6 +2,7 @@
 
 namespace Brouzie\Specificator\Bridge\Elastica;
 
+use Brouzie\Specificator\Specification;
 use Elastica\Query;
 use Elastica\ResultSet;
 
@@ -19,10 +20,10 @@ class DelegatingElasticaResultBuilder implements ElasticaResultBuilder
         $this->hydrator = $hydrator;
     }
 
-    public function modifyQuery(Query $query): void
+    public function modifyQuery(Query $query, Specification $specification): void
     {
         if (null !== $this->queryModifier) {
-            ($this->queryModifier)($query);
+            ($this->queryModifier)($query, $specification);
         }
     }
 

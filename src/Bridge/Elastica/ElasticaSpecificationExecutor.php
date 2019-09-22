@@ -39,7 +39,7 @@ class ElasticaSpecificationExecutor implements SpecificationExecutor
         $query = $this->createQuery();
 
         $resultBuilder = $this->resultBuilderLocator->getResultBuilder($resultItemClass);
-        $resultBuilder->modifyQuery($query);
+        $resultBuilder->modifyQuery($query, $specification);
 
         $this->mapFilters($specification, $query->getQuery());
         $this->mapSortsOrders($specification, $query);
